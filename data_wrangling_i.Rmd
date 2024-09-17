@@ -1,0 +1,149 @@
+---
+title: "Data Wrangling"
+output: html_document
+---
+
+
+
+# Libraries
+
+
+```{r libraries}
+library(tidyverse)
+
+
+
+```
+
+# Importing Data
+
+
+```{r importing_data}
+litters_df = read_csv(file = "./data/FAS_litters.csv") # Relative Path
+
+## pups_df = read_csv(file = "~\Desktop\Fall 2024\Data Science\Week 3 - Data Wrangling\p8105_DataWrangling\data\FAS_litters.csv") # Absolute path
+
+# Cleaning data
+
+names(litters_df)
+
+# Janitor - will convert to snake case
+litters_df = janitor::clean_names(litters_df) 
+names(litters_df)
+
+
+# Skim data
+
+skimr::skim(litters_df)
+
+# Using read to read in a file:  the call below will skip the first 50 lines of data and not assume the first row are variable names
+
+litters_df = 
+    read_csv(file = "./data/FAS_litters.csv",
+    skip = 10, col_names = FALSE)
+
+
+# Parsing columns
+
+##
+
+# col_types = cols(...): This specifies the data types for each column:
+# Group and Litter Number are set as character (text) columns
+# GD0 weight and GD18 weight are set as double (decimal number) columns
+# GD of Birth, Pups born alive, Pups dead @ birth, and Pups survive are set as integer columns
+
+
+litters_df = 
+    read_csv(file = "./data/FAS_litters.csv",
+        na = c(".", "NA", ""),
+    col_types = cols(
+      Group = col_character(),
+      `Litter Number` = col_character(),
+      `GD0 weight` = col_double(),
+      `GD18 weight` = col_double(),
+      `GD of Birth` = col_integer(),
+      `Pups born alive` = col_integer(),
+      `Pups dead @ birth` = col_integer(),
+      `Pups survive` = col_integer()
+    )
+  )
+
+tail(litters_df)
+
+
+# There's a compact way to assign variable types
+
+pups_df = 
+    read_csv("./data/FAS_pups.csv",
+        na = c(".", "NA"), col_types = "fddddd")
+
+skimr::skim(pups_df)
+
+# col_types = "fddddd": This is a compact way to specify column types:
+
+# f: The first column is set as a factor (categorical variable)
+# d: The next five columns are set as doubles (decimal numbers)
+
+
+```
+
+
+# Importing other file formats
+
+Non-CSV plain text files (e.g. tab delimited files) can be handled using read_delim(). This is very similar to read_csv, but you have to specify a delimiter.
+
+```{r importing_other}
+library(readxl)
+
+mlb11_df = read_excel("data/mlb11.xlsx", n_max = 20)
+# n_max = 20: This argument limits the number of rows read from the Excel file to a maximum of 20.
+
+head(mlb11_df, 5)
+
+
+library(haven)
+
+pulse_df = read_sas("./data/public_pulse_data.sas7bdat")
+# You can read in data that isn’t coming as a flat file (think data rectangle), but it’s beyond our current scope.
+
+head(pulse_df, 5)
+```
+
+
+
+
+# Comparison with BaseR
+
+The base R versions tend to be slower (very noticeably for large datasets), and the default options can make less sense for modern datasets. Meanwhile, the readr functions export tibbles, and keep characters as characters (instead of converting to factors …).
+
+Key differences you might observe:
+
+1. Data types: read_csv() often does a better job at guessing column types, while read.csv() might default to factors for character columns.
+
+2. Speed: read_csv() is generally faster, especially for larger files.
+
+3. Column names: read_csv() might handle spaces and special characters in column names differently than read.csv().
+
+4. Missing values: read_csv() has more flexible options for handling missing values.
+
+5. The $S accessor: If "S" is not a column name but the start of a longer column name, read.csv() might allow partial matching, while read_csv() typically does not.
+
+
+```{r baseR}
+library(tidyverse)
+
+pups_base = read.csv("./data/FAS_pups.csv") # This uses base R's read.csv() function to read the CSV file and store it in pups_base.
+pups_readr = read_csv("./data/FAS_pups.csv") # This uses the readr package's read_csv() function to read the same CSV file and store it in pups_readr.
+
+
+View(pups_base)
+View(pups_readr)
+
+pups_base
+pups_readr
+
+pups_base$S
+pups_readr$S
+
+
+```
