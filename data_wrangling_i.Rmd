@@ -10,8 +10,11 @@ output: html_document
 
 ```{r libraries}
 library(tidyverse)
+library(haven)
+library(readxl)
+library(janitor)
 
-
+options(tibble.print_min = 5)
 
 ```
 
@@ -21,38 +24,46 @@ library(tidyverse)
 ```{r importing_data}
 litters_df = read_csv(file = "./data/FAS_litters.csv") # Relative Path
 
-## pups_df = read_csv(file = "~\Desktop\Fall 2024\Data Science\Week 3 - Data Wrangling\p8105_DataWrangling\data\FAS_litters.csv") # Absolute path
+# pups_df = read_csv(file = "~\Desktop\Fall 2024\Data Science\Week 3 - Data #Wrangling\p8105_DataWrangling\data\FAS_litters.csv") # Absolute path
+
+```
 
 # Cleaning data
 
+```{r}
 names(litters_df)
 
 # Janitor - will convert to snake case
 litters_df = janitor::clean_names(litters_df) 
 names(litters_df)
-
+```
 
 # Skim data
+```{r}
 
 skimr::skim(litters_df)
 
 # Using read to read in a file:  the call below will skip the first 50 lines of data and not assume the first row are variable names
+```
+
+# Using read_csv to read in a file
+
+```{r}
 
 litters_df = 
     read_csv(file = "./data/FAS_litters.csv",
     skip = 10, col_names = FALSE)
 
+```
 
 # Parsing columns
 
-##
+col_types = cols(...): This specifies the data types for each column:
+Group and Litter Number are set as character (text) columns
+GD0 weight and GD18 weight are set as double (decimal number) columns
+GD of Birth, Pups born alive, Pups dead @ birth, and Pups survive are set as integer columns
 
-# col_types = cols(...): This specifies the data types for each column:
-# Group and Litter Number are set as character (text) columns
-# GD0 weight and GD18 weight are set as double (decimal number) columns
-# GD of Birth, Pups born alive, Pups dead @ birth, and Pups survive are set as integer columns
-
-
+```{r}
 litters_df = 
     read_csv(file = "./data/FAS_litters.csv",
         na = c(".", "NA", ""),
@@ -69,34 +80,37 @@ litters_df =
   )
 
 tail(litters_df)
-
+```
 
 # There's a compact way to assign variable types
 
+
+col_types = "fddddd": This is a compact way to specify column types:
+
+f: The first column is set as a factor (categorical variable)
+d: The next five columns are set as doubles (decimal numbers)
+
+```{r}
 pups_df = 
     read_csv("./data/FAS_pups.csv",
         na = c(".", "NA"), col_types = "fddddd")
 
 skimr::skim(pups_df)
 
-# col_types = "fddddd": This is a compact way to specify column types:
-
-# f: The first column is set as a factor (categorical variable)
-# d: The next five columns are set as doubles (decimal numbers)
-
-
 ```
 
 
-# Importing other file formats
+
+# Importing other file formats: using readxl and haven
 
 Non-CSV plain text files (e.g. tab delimited files) can be handled using read_delim(). This is very similar to read_csv, but you have to specify a delimiter.
 
-```{r importing_other}
+n_max = 20: This argument limits the number of rows read from the Excel file to a maximum of 20.
+
+```{r}
 library(readxl)
 
 mlb11_df = read_excel("data/mlb11.xlsx", n_max = 20)
-# n_max = 20: This argument limits the number of rows read from the Excel file to a maximum of 20.
 
 head(mlb11_df, 5)
 
@@ -108,8 +122,6 @@ pulse_df = read_sas("./data/public_pulse_data.sas7bdat")
 
 head(pulse_df, 5)
 ```
-
-
 
 
 # Comparison with BaseR
@@ -129,7 +141,10 @@ Key differences you might observe:
 5. The $S accessor: If "S" is not a column name but the start of a longer column name, read.csv() might allow partial matching, while read_csv() typically does not.
 
 
-```{r baseR}
+NOTE: Never use read.csv (ie BASER) !!
+
+```{r}
+
 library(tidyverse)
 
 pups_base = read.csv("./data/FAS_pups.csv") # This uses base R's read.csv() function to read the CSV file and store it in pups_base.
@@ -144,6 +159,143 @@ pups_readr
 
 pups_base$S
 pups_readr$S
+
+```
+
+## Data Science Data Wrangling Continued
+
+```{r}
+
+pulse_df = 
+  haven::read_sas("./data/public_pulse_data.sas7bdat") |>
+  janitor::clean_names()
+
+pulse_df
+
+pulse_tidy_data = 
+  pivot_longer(
+    pulse_df, 
+    bdi_score_bl:bdi_score_12m,
+    names_to = "visit", 
+    values_to = "bdi")
+
+pulse_tidy_data
+
+
+
+pulse_tidy_data = 
+  pivot_longer(
+    pulse_df, 
+    bdi_score_bl:bdi_score_12m,
+    names_to = "visit", 
+    names_prefix = "bdi_score_",
+    values_to = "bdi")
+
+
+
+## Cleaning/prepping data altogether
+
+pulse_df = 
+  haven::read_sas("./data/public_pulse_data.sas7bdat") |>
+  janitor::clean_names() |>
+  pivot_longer(
+    bdi_score_bl:bdi_score_12m,
+    names_to = "visit", 
+    names_prefix = "bdi_score_",
+    values_to = "bdi") |>
+  mutate(
+    visit = replace(visit, visit == "bl", "00m"),
+    visit = factor(visit)) 
+
+print(pulse_df, n = 12)
+
+```
+
+
+## Learning Assessment:
+In the litters data, the variables gd0_weight and gd18_weight give the weight of the mother mouse on gestational days 0 and 18. Write a data cleaning chain that retains only litter_number and these columns; produces new variables gd and weight; and makes gd a numeric variable taking values 0 and 18 (for the last part, you might want to use recode …). Is this version “tidy”?
+
+
+```{r LearningAssessment}
+
+cleaned_litters_df <- litters_df %>%
+  select(litter_number, gd0_weight, gd18_weight) %>%
+  pivot_longer(
+    cols = c(gd0_weight, gd18_weight),
+    names_to = "gd",
+    values_to = "weight"
+  ) %>%
+  mutate(
+    gd = as.numeric(str_remove(gd, "gd") %>% str_remove("_weight"))
+  )
+
+print(cleaned_litters_df)
+
+
+
+
+
+```
+
+##UNTIDY DATA
+
+```{r}
+
+
+analysis_result = 
+  tibble(
+    group = c("treatment", "treatment", "placebo", "placebo"),
+    time = c("pre", "post", "pre", "post"),
+    mean = c(4, 8, 3.5, 4)
+  )
+
+analysis_result
+## # A tibble: 4 × 3
+##   group     time   mean
+##   <chr>     <chr> <dbl>
+## 1 treatment pre     4  
+## 2 treatment post    8  
+## 3 placebo   pre     3.5
+## 4 placebo   post    4
+
+
+analysis_result %>%
+  pivot_wider(
+    names_from = "time", 
+    values_from = "mean"
+  ) %>%
+  knitr::kable()
+
+## # A tibble: 2 × 3
+##   group       pre  post
+##   <chr>     <dbl> <dbl>
+## 1 treatment   4       8
+## 2 placebo     3.5     4
+
+
+
+```
+
+
+
+
+## BINDING ROWS
+
+```{r binding_rows}
+
+# read each table and do some cleaning
+
+fellowship_ring = 
+  readxl::read_excel("./data/LotR_Words.xlsx", range = "B3:D6") |>
+  mutate(movie = "fellowship_ring")
+
+two_towers = 
+  readxl::read_excel("./data/LotR_Words.xlsx", range = "F3:H6") |>
+  mutate(movie = "two_towers")
+
+return_king = 
+  readxl::read_excel("./data/LotR_Words.xlsx", range = "J3:L6") |>
+  mutate(movie = "return_king")
 
 
 ```

@@ -378,11 +378,11 @@ display: none;
 ## 
 ## ℹ Use `spec()` to retrieve the full column specification for this data.
 ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
-<pre class="r"><code>## pups_df = read_csv(file = &quot;~\Desktop\Fall 2024\Data Science\Week 3 - Data Wrangling\p8105_DataWrangling\data\FAS_litters.csv&quot;) # Absolute path
-
-# Cleaning data
-
-names(litters_df)</code></pre>
+<pre class="r"><code># pups_df = read_csv(file = &quot;~\Desktop\Fall 2024\Data Science\Week 3 - Data #Wrangling\p8105_DataWrangling\data\FAS_litters.csv&quot;) # Absolute path</code></pre>
+</div>
+<div id="cleaning-data" class="section level1">
+<h1>Cleaning data</h1>
+<pre class="r"><code>names(litters_df)</code></pre>
 <pre><code>## [1] &quot;Group&quot;             &quot;Litter Number&quot;     &quot;GD0 weight&quot;       
 ## [4] &quot;GD18 weight&quot;       &quot;GD of Birth&quot;       &quot;Pups born alive&quot;  
 ## [7] &quot;Pups dead @ birth&quot; &quot;Pups survive&quot;</code></pre>
@@ -391,9 +391,10 @@ litters_df = janitor::clean_names(litters_df)
 names(litters_df)</code></pre>
 <pre><code>## [1] &quot;group&quot;           &quot;litter_number&quot;   &quot;gd0_weight&quot;      &quot;gd18_weight&quot;    
 ## [5] &quot;gd_of_birth&quot;     &quot;pups_born_alive&quot; &quot;pups_dead_birth&quot; &quot;pups_survive&quot;</code></pre>
-<pre class="r"><code># Skim data
-
-skimr::skim(litters_df)</code></pre>
+</div>
+<div id="skim-data" class="section level1">
+<h1>Skim data</h1>
+<pre class="r"><code>skimr::skim(litters_df)</code></pre>
 <table>
 <caption>Data summary</caption>
 <tbody>
@@ -593,9 +594,11 @@ skimr::skim(litters_df)</code></pre>
 </tr>
 </tbody>
 </table>
-<pre class="r"><code># Using read to read in a file:  the call below will skip the first 50 lines of data and not assume the first row are variable names
-
-litters_df = 
+<pre class="r"><code># Using read to read in a file:  the call below will skip the first 50 lines of data and not assume the first row are variable names</code></pre>
+</div>
+<div id="using-read_csv-to-read-in-a-file" class="section level1">
+<h1>Using read_csv to read in a file</h1>
+<pre class="r"><code>litters_df = 
     read_csv(file = &quot;./data/FAS_litters.csv&quot;,
     skip = 10, col_names = FALSE)</code></pre>
 <pre><code>## Rows: 40 Columns: 8
@@ -606,17 +609,15 @@ litters_df =
 ## 
 ## ℹ Use `spec()` to retrieve the full column specification for this data.
 ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
-<pre class="r"><code># Parsing columns
-
-##
-
-# col_types = cols(...): This specifies the data types for each column:
-# Group and Litter Number are set as character (text) columns
-# GD0 weight and GD18 weight are set as double (decimal number) columns
-# GD of Birth, Pups born alive, Pups dead @ birth, and Pups survive are set as integer columns
-
-
-litters_df = 
+</div>
+<div id="parsing-columns" class="section level1">
+<h1>Parsing columns</h1>
+<p>col_types = cols(…): This specifies the data types for each column:
+Group and Litter Number are set as character (text) columns GD0 weight
+and GD18 weight are set as double (decimal number) columns GD of Birth,
+Pups born alive, Pups dead @ birth, and Pups survive are set as integer
+columns</p>
+<pre class="r"><code>litters_df = 
     read_csv(file = &quot;./data/FAS_litters.csv&quot;,
         na = c(&quot;.&quot;, &quot;NA&quot;, &quot;&quot;),
     col_types = cols(
@@ -643,9 +644,14 @@ tail(litters_df)</code></pre>
 ## 6 Low8  #110                    25.5          42.7            20
 ## # ℹ 3 more variables: `Pups born alive` &lt;int&gt;, `Pups dead @ birth` &lt;int&gt;,
 ## #   `Pups survive` &lt;int&gt;</code></pre>
-<pre class="r"><code># There&#39;s a compact way to assign variable types
-
-pups_df = 
+</div>
+<div id="theres-a-compact-way-to-assign-variable-types" class="section level1">
+<h1>There’s a compact way to assign variable types</h1>
+<p>col_types = “fddddd”: This is a compact way to specify column
+types:</p>
+<p>f: The first column is set as a factor (categorical variable) d: The
+next five columns are set as doubles (decimal numbers)</p>
+<pre class="r"><code>pups_df = 
     read_csv(&quot;./data/FAS_pups.csv&quot;,
         na = c(&quot;.&quot;, &quot;NA&quot;), col_types = &quot;fddddd&quot;)
 
@@ -820,20 +826,17 @@ skimr::skim(pups_df)</code></pre>
 </tr>
 </tbody>
 </table>
-<pre class="r"><code># col_types = &quot;fddddd&quot;: This is a compact way to specify column types:
-
-# f: The first column is set as a factor (categorical variable)
-# d: The next five columns are set as doubles (decimal numbers)</code></pre>
 </div>
-<div id="importing-other-file-formats" class="section level1">
-<h1>Importing other file formats</h1>
+<div id="importing-other-file-formats-using-readxl-and-haven" class="section level1">
+<h1>Importing other file formats: using readxl and haven</h1>
 <p>Non-CSV plain text files (e.g. tab delimited files) can be handled
 using read_delim(). This is very similar to read_csv, but you have to
 specify a delimiter.</p>
+<p>n_max = 20: This argument limits the number of rows read from the
+Excel file to a maximum of 20.</p>
 <pre class="r"><code>library(readxl)
 
 mlb11_df = read_excel(&quot;data/mlb11.xlsx&quot;, n_max = 20)
-# n_max = 20: This argument limits the number of rows read from the Excel file to a maximum of 20.
 
 head(mlb11_df, 5)</code></pre>
 <pre><code>## # A tibble: 5 × 12
